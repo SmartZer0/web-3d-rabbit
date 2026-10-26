@@ -179,6 +179,7 @@
 
     .ar-button {
       position: absolute;
+      z-index: 4;
       right: 14px;
       bottom: 58px;
       min-height: 42px;
@@ -393,7 +394,7 @@
           autoplay
           animation-name="Hop"
           ar
-          ar-modes="webxr quick-look"
+          ar-modes="webxr scene-viewer quick-look"
           ios-src="./assets/rabbit.usdz"
           ar-placement="floor"
           ar-scale="auto"
@@ -558,6 +559,36 @@
       progress.hidden = true;
       animationStatus.textContent = "Без анимации. И без кролика.";
       setDisabled(true);
+    });
+
+    const prepareForAR = () => {
+      model.autoRotate = false;
+      rotateButton.setAttribute("aria-pressed", "false");
+      rotateButton.textContent = "Карусель";
+    };
+
+    const playLoopingAnimation = () => {
+      if (!ready) return;
+      model.play({ repetitions: Infinity });
+      playing = true;
+      refreshToggle();
+    };
+
+    document.querySelector(".ar-button").addEventListener("click", prepareForAR);
+
+    model.addEventListener("ar-status", (event) => {
+      const status = event.detail.status;
+      if (status === "failed") {
+        loadStatus.textContent = "AR: откройте в Chrome, не в Telegram";
+        loadStatus.dataset.state = "error";
+        return;
+      }
+      if (status === "session-started" || status === "object-placed") {
+        prepareForAR();
+        playLoopingAnimation();
+        loadStatus.textContent = "AR-сессия";
+        loadStatus.dataset.state = "";
+      }
     });
 
     rotateButton.addEventListener("click", () => {
